@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نور | المنصة الإسلامية المتكاملة</title>
+    <!-- Tailwind CSS & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: '#0f5132', secondary: '#198754', accent: '#ffc107', bgDark: '#0a0a0a' },
+                    fontFamily: { sans: ['IBM Plex Sans Arabic', 'sans-serif'], amiri: ['Amiri', 'serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .dark .glass-card { background: rgba(30, 30, 30, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .quran-text { line-height: 2.5; word-spacing: 2px; }
+        .nav-active { color: #198754; background: rgba(25, 135, 84, 0.1); border-radius: 12px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #198754; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#f4f7f6] dark:bg-bgDark text-slate-800 dark:text-slate-200 font-sans transition-all duration-500">
+
+    <!-- Sidebar / Bottom Nav -->
+    <aside class="fixed bottom-0 left-0 right-0 lg:top-0 lg:right-0 lg:w-24 bg-white dark:bg-slate-900 shadow-2xl z-[100] border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800">
+        <div class="flex lg:flex-col justify-around lg:justify-center items-center h-full py-4 lg:gap-8">
+            <div class="hidden lg:block mb-10"><div class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl">ن</div></div>
+            <button onclick="switchTab('home')" class="nav-item p-3 group"><div class="text-2xl group-hover:scale-110 transition">🏠</div><span class="text-[10px] block mt-1">الرئيسية</span></button>
+            <button onclick="switchTab('quran')" class="nav-item p-3 group"><div class="text-2xl group-hover:scale-110 transition">📖</div><span class="text-[10px] block mt-1">المصحف</span></button>
+            <button onclick="switchTab('azkar')" class="nav-item p-3 group"><div class="text-2xl group-hover:scale-110 transition">📿</div><span class="text-[10px] block mt-1">الأذكار</span></button>
+            <button onclick="switchTab('radio')" class="nav-item p-3 group"><div class="text-2xl group-hover:scale-110 transition">📻</div><span class="text-[10px] block mt-1">الراديو</span></button>
+            <button onclick="toggleDarkMode()" class="p-3">🌙</button>
+        </div>
+    </aside>
+
+    <main class="lg:mr-24 p-4 lg:p-8 pb-32">
+        
+        <!-- القسم الرئيسي (الرئيسية) -->
+        <section id="sec-home" class="tab-content">
+            <div class="flex flex-col lg:flex-row gap-6 mb-8">
+                <!-- آية اليوم -->
+                <div class="flex-1 glass-card rounded-[2rem] p-8 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="bg-primary/10 text-primary px-4 py-1 rounded-full text-xs font-bold uppercase">آية اليوم</span>
+                        <span id="daily-ayah-ref" class="text-xs opacity-50">--</span>
+                    </div>
+                    <p id="daily-ayah-text" class="font-amiri text-3xl text-right text-slate-700 dark:text-slate-100 leading-relaxed italic">"جاري جلب الآية..."</p>
+                </div>
+                <!-- التوقيت القادم -->
+                <div class="lg:w-80 bg-primary text-white rounded-[2rem] p-8 shadow-xl relative overflow-hidden flex flex-col justify-center">
+                    <p class="text-emerald-200 text-sm mb-2 font-bold uppercase tracking-widest">الصلاة القادمة</p>
+                    <h2 id="next-prayer-name" class="text-4xl font-bold mb-1">--</h2>
+                    <p id="next-prayer-time" class="text-2xl font-light opacity-80 mb-4 tracking-tighter">--:--</p>
+                    <p id="countdown" class="text-xs bg-black/20 p-2 rounded-lg inline-block w-fit italic">--:--:--</p>
+                    <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+                </div>
+            </div>
+
+            <!-- شبكة المواقيت -->
+            <div id="prayer-cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <!-- Cards injected here -->
+            </div>
+        </section>
+
+        <!-- قسم المصحف الاحترافي -->
+        <section id="sec-quran" class="tab-content hidden animate-fade-in">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- القائمة الجانبية للسور -->
+                <div id="quran-sidebar" class="w-full lg:w-72 space-y-4">
+                    <div class="glass-card rounded-3xl p-4 sticky top-24 border border-slate-200 dark:border-slate-800">
+                        <input type="text" id="surah-search" oninput="filterSurahs()" placeholder="ابحث عن سورة..." class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl text-sm outline-none border-none">
+                        <div id="surah-list" class="mt-4 max-h-[60vh] overflow-y-auto custom-scroll space-y-1"></div>
+                    </div>
+                </div>
+                <!-- محرك القراءة -->
+                <div class="flex-1 space-y-4">
+                    <div class="glass-card rounded-3xl p-4 flex flex-wrap justify-between items-center gap-4 border border-slate-200 dark:border-slate-800">
+                        <div class="flex gap-2">
+                            <button onclick="toggleQuranSidebar()" class="lg:hidden p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">📂</button>
+                            <h3 id="current-surah-title" class="font-bold text-primary dark:text-emerald-400 self-center">اسم السورة</h3>
+                        </div>
+                        <select id="reciter-select" onchange="updateAudioPlayer()" class="bg-slate-100 dark:bg-slate-800 p-2 rounded-xl text-xs font-bold outline-none border-none">
+                            <option value="https://server8.mp3quran.net/afs/">مشاري العفاسي</option>
+                            <option value="https://server10.mp3quran.net/minsh/Murattal/">المنشاوي (مرتل)</option>
+                            <option value="https://server7.mp3quran.net/basit/">عبد الباسط (مرتل)</option>
+                            <option value="https://server12.mp3quran.net/maher/">ماهر المعيقلي</option>
+                        </select>
+                    </div>
+                    <div id="quran-display" class="glass-card rounded-[2.5rem] p-8 md:p-12 min-h-[70vh] relative shadow-sm">
+                        <div id="ayah-container" class="font-amiri text-4xl text-right quran-text text-slate-800 dark:text-slate-100"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم الأذكار المبوب -->
+        <section id="sec-azkar" class="tab-content hidden animate-fade-in">
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div onclick="showAzkarCategory('morning')" class="glass-card p-6 rounded-3xl border-r-8 border-orange-400 cursor-pointer hover:scale-105 transition">
+                        <h3 class="text-xl font-bold mb-1">أذكار الصباح ☀️</h3>
+                        <p class="text-xs opacity-50">تحصين المسلم اليومي</p>
+                    </div>
+                    <div onclick="showAzkarCategory('evening')" class="glass-card p-6 rounded-3xl border-r-8 border-indigo-400 cursor-pointer hover:scale-105 transition">
+                        <h3 class="text-xl font-bold mb-1">أذكار المساء 🌙</h3>
+                        <p class="text-xs opacity-50">هدوء وطمأنينة</p>
+                    </div>
+                </div>
+                <div id="azkar-display" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <!-- قسم الراديو -->
+        <section id="sec-radio" class="tab-content hidden text-center">
+            <div class="max-w-md mx-auto glass-card rounded-[3rem] p-12 border-b-8 border-primary">
+                <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">📻</div>
+                <h2 class="text-2xl font-bold mb-2">إذاعة القرآن الكريم</h2>
+                <p class="text-xs opacity-50 mb-10 italic">بث مباشر من القاهرة</p>
+                <audio controls id="radio-audio" class="w-full h-10 shadow-inner rounded-xl"><source src="https://backup.qurango.net/radio/tarabeelsi"></audio>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- مشغل الصوت العائم (Professional Player Bar) -->
+    <footer id="audio-player" class="fixed bottom-20 lg:bottom-4 left-4 right-4 lg:left-32 lg:right-8 glass-card rounded-2xl p-4 shadow-2xl z-[101] transform translate-y-40 transition-transform duration-700">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 w-1/3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-xs animate-spin-slow">💿</div>
+                <div class="truncate">
+                    <p id="player-surah" class="text-xs font-bold truncate text-primary">--</p>
+                    <p id="player-reciter" class="text-[9px] opacity-50 font-bold uppercase">الآن يستمع</p>
+                </div>
+            </div>
+            <audio id="main-audio" controls class="h-8 w-full lg:w-1/2"></audio>
+            <button onclick="document.getElementById('audio-player').classList.add('translate-y-40')" class="p-2 opacity-20 hover:opacity-100">×</button>
+        </div>
+    </footer>
+
+    <!-- Tafsir Modal -->
+    <div id="tafsir-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-[200] flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
+        <div class="glass-card max-w-lg w-full rounded-[2.5rem] p-8 shadow-2xl scale-100 transition-all" onclick="event.stopPropagation()">
+            <h4 class="text-primary font-bold mb-4 border-b pb-2">التفسير الميسر</h4>
+            <p id="tafsir-text" class="text-lg leading-relaxed text-slate-700 dark:text-slate-100"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- Core State ---
+        let state = {
+            surahs: [],
+            prayers: {},
+            currentSurah: null,
+            theme: localStorage.getItem('theme') || 'light',
+            azkar: {
+                morning: [
+                    { t: "أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له", c: 1 },
+                    { t: "اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور", c: 1 },
+                    { t: "أستغفر الله وأتوب إليه", c: 100 }
+                ],
+                evening: [
+                    { t: "أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له", c: 1 },
+                    { t: "اللهم بك أمسينا وبك أصبحنا وبك نحيا وبك نموت وإليك المصير", c: 1 },
+                    { t: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", c: 100 }
+                ]
+            }
+        };
+
+        // --- Initialization ---
+        async function init() {
+            setTheme(state.theme);
+            initLocation();
+            loadSurahList();
+            loadVerseOfDay();
+            switchTab('home');
+        }
+
+        // --- UI Logic ---
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('nav-active'));
+            document.getElementById('sec-' + id).classList.remove('hidden');
+            // التمرير للأعلى
+            window.scrollTo(0,0);
+        }
+
+        function setTheme(m) {
+            state.theme = m;
+            document.documentElement.classList.toggle('dark', m === 'dark');
+            localStorage.setItem('theme', m);
+        }
+
+        function toggleDarkMode() { setTheme(state.theme === 'light' ? 'dark' : 'light'); }
+
+        // --- Prayers Engine ---
+        function initLocation() {
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(data => {
+                getPrayers(data.latitude, data.longitude, data.city);
+            }).catch(() => getPrayers(30.0444, 31.2357, "القاهرة"));
+        }
+
+        async function getPrayers(lat, lng, city) {
+            const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=4`);
+            const data = await res.json();
+            state.prayers = data.data.timings;
+            renderPrayers(data.data);
+            startCountdown();
+        }
+
+        function renderPrayers(data) {
+            const names = { Fajr: 'الفجر', Sunrise: 'الشروق', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
+            document.getElementById('prayer-cards').innerHTML = Object.entries(names).map(([key, label]) => `
+                <div class="glass-card p-6 rounded-[2rem] text-center hover:bg-primary/5 transition group">
+                    <p class="text-[10px] opacity-40 font-bold mb-2 uppercase tracking-widest">${label}</p>
+                    <p class="text-2xl font-800 text-slate-800 dark:text-white group-hover:text-primary transition">${state.prayers[key]}</p>
+                </div>
+            `).join('');
+        }
+
+        function startCountdown() {
+            setInterval(() => {
+                const now = new Date();
+                const pList = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+                let next = pList.find(p => {
+                    const [h, m] = state.prayers[p].split(':');
+                    const pd = new Date(); pd.setHours(h, m, 0);
+                    return pd > now;
+                }) || 'Fajr';
+                
+                const [h, m] = state.prayers[next].split(':');
+                const target = new Date(); target.setHours(h, m, 0);
+                if (target < now) target.setDate(target.getDate() + 1);
+                
+                const diff = target - now;
+                const hh = Math.floor(diff/3600000);
+                const mm = Math.floor((diff%3600000)/60000);
+                const ss = Math.floor((diff%60000)/1000);
+                
+                document.getElementById('next-prayer-name').innerText = next === 'Fajr' ? 'صلاة الفجر' : `صلاة ${next}`;
+                document.getElementById('next-prayer-time').innerText = state.prayers[next];
+                document.getElementById('countdown').innerText = `${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        // --- Quran Engine ---
+        async function loadSurahList() {
+            const res = await fetch('https://api.alquran.cloud/v1/surah');
+            const data = await res.json();
+            state.surahs = data.data;
+            renderSurahList(state.surahs);
+        }
+
+        function renderSurahList(list) {
+            document.getElementById('surah-list').innerHTML = list.map(s => `
+                <button onclick="loadSurah(${s.number})" class="w-full flex justify-between p-3 rounded-2xl hover:bg-primary/10 transition text-sm">
+                    <span class="opacity-20 font-bold">${s.number}</span>
+                    <span class="font-bold">${s.name}</span>
+                </button>
+            `).join('');
+        }
+
+        async function loadSurah(num) {
+            state.currentSurah = num;
+            const container = document.getElementById('ayah-container');
+            container.innerHTML = `<div class="py-20 text-center animate-pulse text-sm">جاري جلب السورة...</div>`;
+            
+            const [textRes, tafsirRes] = await Promise.all([
+                fetch(`https://api.alquran.cloud/v1/surah/${num}`),
+                fetch(`https://api.alquran.cloud/v1/surah/${num}/ar.jalalayn`)
+            ]);
+            const textData = await textRes.json();
+            const tafsirData = await tafsirRes.json();
+            
+            container.innerHTML = `<h2 class="text-5xl text-center mb-16 text-primary font-bold font-amiri">${textData.data.name}</h2>`;
+            textData.data.ayahs.forEach((a, i) => {
+                const span = document.createElement('span');
+                span.className = "cursor-help hover:text-primary transition-all duration-300 px-1 inline-block";
+                span.innerHTML = `${a.text} <span class="text-primary opacity-30 text-xl font-bold">﴿${a.numberInSurah}﴾</span> `;
+                span.onclick = () => showTafsir(tafsirData.data.ayahs[i].text);
+                container.appendChild(span);
+            });
+            updateAudioPlayer();
+            document.getElementById('current-surah-title').innerText = textData.data.name;
+        }
+
+        function updateAudioPlayer() {
+            if(!state.currentSurah) return;
+            const srv = document.getElementById('reciter-select').value;
+            const audio = document.getElementById('main-audio');
+            const bar = document.getElementById('audio-player');
+            const surahName = state.surahs.find(s => s.number === state.currentSurah).name;
+
+            bar.classList.remove('translate-y-40');
+            audio.src = `${srv}${state.currentSurah.toString().padStart(3, '0')}.mp3`;
+            audio.play();
+            document.getElementById('player-surah').innerText = surahName;
+        }
+
+        // --- Azkar Logic ---
+        function showAzkarCategory(cat) {
+            const container = document.getElementById('azkar-display');
+            container.innerHTML = state.azkar[cat].map(z => `
+                <div class="glass-card p-6 rounded-[2rem] border-l-4 border-primary transition flex justify-between items-center group" onclick="decrementCount(this)">
+                    <p class="font-amiri text-2xl text-slate-700 dark:text-slate-100">${z.t}</p>
+                    <span class="count-badge bg-primary text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold">${z.c}</span>
+                </div>
+            `).join('');
+        }
+
+        function decrementCount(el) {
+            const badge = el.querySelector('.count-badge');
+            let c = parseInt(badge.innerText);
+            if(c > 0) {
+                badge.innerText = c - 1;
+                if(c - 1 === 0) el.style.opacity = '0.3';
+                if(navigator.vibrate) navigator.vibrate(30);
+            }
+        }
+
+        // --- Helpers ---
+        function showTafsir(t) {
+            document.getElementById('tafsir-text').innerText = t;
+            document.getElementById('tafsir-modal').classList.remove('hidden');
+        }
+
+        async function loadVerseOfDay() {
+            const randomAyah = Math.floor(Math.random() * 6236) + 1;
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${randomAyah}/ar.jalalayn`);
+            const data = await res.json();
+            document.getElementById('daily-ayah-text').innerText = `"${data.data.text}"`;
+            document.getElementById('daily-ayah-ref').innerText = `سورة ${data.data.surah.name} - آية ${data.data.numberInSurah}`;
+        }
+
+        function filterSurahs() {
+            const q = document.getElementById('surah-search').value;
+            renderSurahList(state.surahs.filter(s => s.name.includes(q)));
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
